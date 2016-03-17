@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">天气</string>
+    <string name="runText">正在运行</string>
+    <string name="stopBtn">停止运行</string>
+    <string name="stopText">已停止</string>
+    <string name="runBtn">开始运行</string>
+    <string name="placeBtnText">更改城市</string>
+</resources>
