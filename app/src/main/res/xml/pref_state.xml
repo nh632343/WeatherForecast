@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <SwitchPreference
+        android:defaultValue="false"
+        android:key="run"
+        android:title="@string/state_title"
+        android:summaryOn="@string/state_summaryOn"
+        android:summaryOff="@string/state_summaryOff"
+        ></SwitchPreference>
+</PreferenceScreen>

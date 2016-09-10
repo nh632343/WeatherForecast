@@ -21,23 +21,29 @@ import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.os.IBinder;
 import android.os.SystemClock;
-import android.support.annotation.Nullable;
+
+import android.preference.PreferenceManager;
+import android.util.Log;
+
 
 import com.example.chaos.weatherforecast.Detail.DetailActivity;
 import com.example.chaos.weatherforecast.R;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
+
 import java.util.Calendar;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.lang.Process;
 
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.util.EntityUtils;
+import org.apache.commons.io.IOUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
+
+import static android.app.PendingIntent.FLAG_CANCEL_CURRENT;
 
 /**
  * Created by chaos on 2016/2/15.
@@ -50,7 +56,7 @@ public class WeatherService extends Service {
     private ContentValues values;
 
 
-    @Nullable
+
 
 
     //--------------此方法发出通知----------------------
@@ -60,7 +66,7 @@ public class WeatherService extends Service {
         if(c!=null){
         Intent intent=new Intent(WeatherService.this,c);
         pendingIntent=PendingIntent.getActivity(WeatherService.this,0,
-                intent,PendingIntent.FLAG_CANCEL_CURRENT);}
+                intent, FLAG_CANCEL_CURRENT);}
         //----------生成notification--------------
         Notification.Builder builder=new Notification.Builder(WeatherService.this)
                 .setContentTitle(title)
@@ -119,16 +125,20 @@ public class WeatherService extends Service {
         protected String doInBackground(String... params) {
             String text="";
             try{
-            HttpClient httpClient=new DefaultHttpClient();
-            HttpGet httpGet=new HttpGet("http://tianqi.2345.com/t/wea_hour_js/"+params[0]+"_1.js");
-            HttpResponse httpResponse = httpClient.execute(httpGet);
-            if(httpResponse.getStatusLine().getStatusCode()==200){
-                HttpEntity httpEntity=httpResponse.getEntity();
-                text= EntityUtils.toString(httpEntity,"gbk");
-                }
-            else{
-                throw new NoConnectionException();
-            }
+
+                URL url=new URL(params[0]);
+                HttpURLConnection connection= (HttpURLConnection) url.openConnection();
+                connection.setReadTimeout(10000);
+                connection.setConnectTimeout(15000);
+                connection.setRequestMethod("GET");
+                connection.setDoInput(true);
+
+                connection.connect();
+                InputStream inputStream=connection.getInputStream();
+                Log.d("xyz",String.valueOf(connection.getResponseCode()));
+                text=IOUtils.toString(inputStream,"GBK");
+
+
             }catch (Exception e){
                 noti("Connection Problem","网络连接出错",
                         Color.RED,null,2);
@@ -154,22 +164,24 @@ public class WeatherService extends Service {
                     }
                     //JSON解析
                     JSONArray jsonArray=new JSONArray(s);
-                    if(jsonArray.length()!=24){
+                    /*if(jsonArray.length()!=24){
                         throw new ContentException();
-                    }
-                    //  把get置为true
-                    editPreferencesBoolean("get",true);
+                    }*/
+
                     //天气遍历
-                    int i;
-                    for (i=6;i<22;++i){
+                    int notiHour=0;
+                    for (int i=6;i<jsonArray.length();++i){
                         JSONObject jsonObject=jsonArray.getJSONObject(i);
                         //如果有雨
-                        if(jsonObject.getString("tq").contains("雨")){
+                        if(jsonObject.getString("tq").contains("云")){
+                            notiHour=i;
+                            //  把get置为true
+                            editPreferencesBoolean("get",true);
                             break;
                         }
                     }
-                    if(i!=22){
-                        editPreferencesString("hour", String.valueOf(i));
+                    if(notiHour!=0){
+                        editPreferencesString("hour", String.valueOf(notiHour));
                         //把小时天气放入数据库
                         db=new WeatherDatabaseHelper(WeatherService.this,"base.db",null,1).getWritableDatabase();
                         Cursor cursor=db.query("wea_hour",null,null,null,null,null,null);
@@ -195,7 +207,7 @@ public class WeatherService extends Service {
                         noti("有雨","明天"+weaPreferences.getString("hour","0")+"点有雨", Color.GREEN,DetailActivity.class,1);
                     }
                 } catch (ContentException e){
-                    noti("Content Problem","获取内容出错",
+                    noti("Content Problem","内容出错",
                             Color.RED,null,3);
                     editPreferencesBoolean("run", false);
                     e.printStackTrace();
@@ -220,7 +232,8 @@ public class WeatherService extends Service {
 
     @Override
     public void onCreate() {
-        weaPreferences= getSharedPreferences("wea", MODE_APPEND);
+
+        weaPreferences= PreferenceManager.getDefaultSharedPreferences(WeatherService.this);
         super.onCreate();
     }
 
@@ -228,7 +241,8 @@ public class WeatherService extends Service {
     public int onStartCommand(Intent intent, int flags, int startId) {
         if(weaPreferences.getBoolean("run",false)){     //app是否要运行
             Calendar calendar=Calendar.getInstance();
-            if(calendar.get(Calendar.HOUR_OF_DAY)>21){       //是否到了22点
+            int remindTime=Integer.parseInt(weaPreferences.getString("remindTime","22"));
+            if(calendar.get(Calendar.HOUR_OF_DAY)>=remindTime){       //是否到了22点
                 if(weaPreferences.getBoolean("get",false)){//获取了天气
                     noti("有雨","明天"+weaPreferences.getString("hour","0")+"点有雨", Color.GREEN,DetailActivity.class,1);
                     stopSelf();
@@ -237,31 +251,35 @@ public class WeatherService extends Service {
                     ConnectivityManager connectivityManager= (ConnectivityManager)getSystemService(Context.CONNECTIVITY_SERVICE);
                     NetworkInfo networkInfo=connectivityManager.getActiveNetworkInfo();
                     if(networkInfo!=null&&networkInfo.isAvailable()){  //有网络
-                        if(netReceiver!=null){   //不为null说明已注册网络监听，需要解绑
-                            unregisterReceiver(netReceiver);
-                        }
-                        String place=weaPreferences.getString("placeNum","57494");
-                        new GetWea().execute(place);
-                    }
-                    else{        //无网络
-                        if (netReceiver==null){
-                            //注册网络监听器
-                            IntentFilter intentFilter=new IntentFilter();
-                            intentFilter.addAction("android.net.conn.CONNECTIVITY_CHANGE");
-                            netReceiver=new NetReceiver();
-                            registerReceiver(netReceiver,intentFilter);
 
-                        }
+
+                            if(netReceiver!=null){   //不为null说明已注册网络监听，需要解绑
+                                unregisterReceiver(netReceiver);
+                            }
+                            String place=weaPreferences.getString("number","57494");
+                            new GetWea().execute("http://tianqi.2345.com/t/wea_hour_js/"+place+"_1.js");
+                            return super.onStartCommand(intent, flags, startId);
+
+
                     }
+                           //无网络
+                    if (netReceiver==null){
+                        //注册网络监听器
+                        IntentFilter intentFilter=new IntentFilter();
+                        intentFilter.addAction("android.net.conn.CONNECTIVITY_CHANGE");
+                        netReceiver=new NetReceiver();
+                        registerReceiver(netReceiver,intentFilter);
+                    }
+
                 }
             }
             else{    //未到22
-                AlarmManager alarmManager= (AlarmManager) getSystemService(WeatherService.this.ALARM_SERVICE);
+                AlarmManager alarmManager= (AlarmManager) getSystemService(Context.ALARM_SERVICE);
                 PendingIntent pendingIntent=PendingIntent.getService(WeatherService.this, 0,
                         new Intent(WeatherService.this, WeatherService.class),
-                        PendingIntent.FLAG_CANCEL_CURRENT);
+                        FLAG_CANCEL_CURRENT);
                 alarmManager.set(AlarmManager.ELAPSED_REALTIME_WAKEUP,
-                        SystemClock.elapsedRealtime()+25*60*1000,
+                        SystemClock.elapsedRealtime()+15*1000,
                         pendingIntent);
                 stopSelf();
             }

@@ -4,9 +4,9 @@ package com.example.chaos.weatherforecast.Detail;
  * Created by chaos on 2016/2/16.
  */
 public class WeaInfo {
-    private String hour;
-    private String tq;
-    private String temp;
+    private final String hour;
+    private final String tq;
+    private final String temp;
 
     public WeaInfo(String hour, String tq, String temp) {
         this.hour = hour;

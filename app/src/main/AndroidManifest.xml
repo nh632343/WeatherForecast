@@ -7,6 +7,7 @@
     <uses-permission android:name="android.permission.INTERNET" />
 
     <application
+        android:name=".Main.MyApp"
         android:allowBackup="true"
         android:icon="@drawable/label"
         android:label="@string/app_name"
@@ -22,9 +23,10 @@
 
         <activity android:name=".Detail.DetailActivity" />
 
+
         <service android:name=".BackgroundService.WeatherService" />
 
-        <activity android:name=".Main.MainActivity">
+        <activity android:name=".BackgroundService.MySettings">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

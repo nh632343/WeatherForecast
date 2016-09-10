@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <ListPreference
+        android:defaultValue="22"
+        android:title="@string/time_title"
+        android:key="remindTime"
+        android:entries="@array/pref_time_list_titles"
+        android:entryValues="@array/pref_time_list_values"
+        android:positiveButtonText="确定"
+        ></ListPreference>
+</PreferenceScreen>

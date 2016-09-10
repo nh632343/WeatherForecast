@@ -5,4 +5,52 @@
     <string name="stopText">已停止</string>
     <string name="runBtn">开始运行</string>
     <string name="placeBtnText">更改城市</string>
+
+    <string name="location_address_title">地点</string>
+    <string name="location_number_title">编号</string>
+    <string name="state_title">运行状态</string>
+    <string name="state_summaryOff">停止</string>
+    <string name="state_summaryOn">运行</string>
+    <string name="time_title">设置提醒时间</string>
+
+    <string-array name="pref_time_list_titles">
+        <item>6</item>
+        <item>7</item>
+        <item>8</item>
+        <item>9</item>
+        <item>10</item>
+        <item>11</item>
+        <item>12</item>
+        <item>13</item>
+        <item>14</item>
+        <item>15</item>
+        <item>16</item>
+        <item>17</item>
+        <item>18</item>
+        <item>19</item>
+        <item>20</item>
+        <item>21</item>
+        <item>22</item>
+
+    </string-array>
+    <string-array name="pref_time_list_values">
+        <item>6</item>
+        <item>7</item>
+        <item>8</item>
+        <item>9</item>
+        <item>10</item>
+        <item>11</item>
+        <item>12</item>
+        <item>13</item>
+        <item>14</item>
+        <item>15</item>
+        <item>16</item>
+        <item>17</item>
+        <item>18</item>
+        <item>19</item>
+        <item>20</item>
+        <item>21</item>
+        <item>22</item>
+
+    </string-array>
 </resources>

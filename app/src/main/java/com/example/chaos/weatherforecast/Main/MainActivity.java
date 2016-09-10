@@ -2,6 +2,7 @@ package com.example.chaos.weatherforecast.Main;
 
 import android.app.AlarmManager;
 import android.app.PendingIntent;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.support.v7.app.AppCompatActivity;
@@ -60,7 +61,7 @@ public class MainActivity extends AppCompatActivity {
                 editor.putBoolean("run",false);
                 editor.putBoolean("get",false);
                 editor.apply();
-                AlarmManager alarmManager= (AlarmManager) getSystemService(MainActivity.this.ALARM_SERVICE);
+                AlarmManager alarmManager= (AlarmManager) getSystemService(Context.ALARM_SERVICE);
                 //取消定时启动
                 PendingIntent pendingIntent=PendingIntent.getService(MainActivity.this, 0,
                         new Intent(MainActivity.this, WeatherService.class),

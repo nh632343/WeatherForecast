@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+     <EditTextPreference
+         android:title="@string/location_address_title"
+         android:defaultValue="武汉"
+         android:selectAllOnFocus="true"
+         android:key="location"
+        ></EditTextPreference>
+    <EditTextPreference
+        android:title="@string/location_number_title"
+        android:defaultValue="57494"
+        android:selectAllOnFocus="true"
+        android:key="number"
+        ></EditTextPreference>
+</PreferenceScreen>
