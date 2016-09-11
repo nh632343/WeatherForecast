@@ -124,6 +124,7 @@ public class WeatherService extends Service {
         @Override
         protected String doInBackground(String... params) {
             String text="";
+            InputStream inputStream=null;
             try{
 
                 URL url=new URL(params[0]);
@@ -134,7 +135,7 @@ public class WeatherService extends Service {
                 connection.setDoInput(true);
 
                 connection.connect();
-                InputStream inputStream=connection.getInputStream();
+                inputStream=connection.getInputStream();
                 Log.d("xyz",String.valueOf(connection.getResponseCode()));
                 text=IOUtils.toString(inputStream,"GBK");
 
@@ -144,6 +145,13 @@ public class WeatherService extends Service {
                         Color.RED,null,2);
                 editPreferencesBoolean("run", false);
                 e.printStackTrace();
+            }finally {
+                if(inputStream!=null)
+                    try {
+                        inputStream.close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
             }
 
             return text;
@@ -173,7 +181,7 @@ public class WeatherService extends Service {
                     for (int i=6;i<jsonArray.length();++i){
                         JSONObject jsonObject=jsonArray.getJSONObject(i);
                         //如果有雨
-                        if(jsonObject.getString("tq").contains("云")){
+                        if(jsonObject.getString("tq").contains("雨")){
                             notiHour=i;
                             //  把get置为true
                             editPreferencesBoolean("get",true);
@@ -251,15 +259,17 @@ public class WeatherService extends Service {
                     ConnectivityManager connectivityManager= (ConnectivityManager)getSystemService(Context.CONNECTIVITY_SERVICE);
                     NetworkInfo networkInfo=connectivityManager.getActiveNetworkInfo();
                     if(networkInfo!=null&&networkInfo.isAvailable()){  //有网络
+                        //判断满足wifi条件
+                        if(networkInfo.getType()==ConnectivityManager.TYPE_WIFI
+                                    ||!weaPreferences.getBoolean("wifi",false)) {
 
-
-                            if(netReceiver!=null){   //不为null说明已注册网络监听，需要解绑
-                                unregisterReceiver(netReceiver);
-                            }
-                            String place=weaPreferences.getString("number","57494");
-                            new GetWea().execute("http://tianqi.2345.com/t/wea_hour_js/"+place+"_1.js");
-                            return super.onStartCommand(intent, flags, startId);
-
+                                if (netReceiver != null) {   //不为null说明已注册网络监听，需要解绑
+                                    unregisterReceiver(netReceiver);
+                                }
+                                String place = weaPreferences.getString("number", "57494");
+                                new GetWea().execute("http://tianqi.2345.com/t/wea_hour_js/" + place + "_1.js");
+                                return super.onStartCommand(intent, flags, startId);
+                        }
 
                     }
                            //无网络
@@ -279,7 +289,7 @@ public class WeatherService extends Service {
                         new Intent(WeatherService.this, WeatherService.class),
                         FLAG_CANCEL_CURRENT);
                 alarmManager.set(AlarmManager.ELAPSED_REALTIME_WAKEUP,
-                        SystemClock.elapsedRealtime()+15*1000,
+                        SystemClock.elapsedRealtime()+20*60*1000,
                         pendingIntent);
                 stopSelf();
             }

@@ -27,12 +27,18 @@ import java.util.List;
 
 public class MySettings extends AppCompatPreferenceActivity {
 
-    private static void freshPreferenceSummary(Preference preference, String newValue){
-        if (preference instanceof ListPreference) {
+    //使preference刷新自己的summary
+    private static void freshPreference(Preference preference, Object newValue){
+
+        if(preference instanceof TwoStatePreference){
+            ((TwoStatePreference)preference).setChecked((Boolean) newValue);
+        }
+        else if (preference instanceof ListPreference) {
             // For list preferences, look up the correct display value in
             // the preference's 'entries' list.
+
             ListPreference listPreference = (ListPreference) preference;
-            int index = listPreference.findIndexOfValue(newValue);
+            int index = listPreference.findIndexOfValue((String) newValue);
 
             // Set the summary to reflect the new value.
             preference.setSummary(
@@ -43,7 +49,7 @@ public class MySettings extends AppCompatPreferenceActivity {
         } else {
             // For all other preferences, set the summary to the value's
             // simple string representation.
-            preference.setSummary(newValue);
+            preference.setSummary((String)newValue);
         }
     }
 
@@ -98,26 +104,23 @@ public class MySettings extends AppCompatPreferenceActivity {
             addPreferencesFromResource(R.xml.pref_state);
             setHasOptionsMenu(true);
 
+            //设置开启/关闭preference
+            //显示当前状态
             TwoStatePreference myTwoStatePreference= (TwoStatePreference) findPreference("run");
             SharedPreferences sharedPreferences=
                     PreferenceManager.getDefaultSharedPreferences(myTwoStatePreference.getContext());
-            boolean state=sharedPreferences.getBoolean("run",false);
 
-            if(state){
-                myTwoStatePreference.setChecked(true);
-            }
-            else{
-                myTwoStatePreference.setChecked(false);
-            }
-
+            freshPreference(myTwoStatePreference,sharedPreferences.getBoolean("run",false));
             myTwoStatePreference.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
                 @Override
                 public boolean onPreferenceChange(Preference preference, Object newValue) {
                     if ((boolean)newValue){
+                        //变为运行,则启动服务
                         Intent intent=new Intent(MyApp.getContext(),WeatherService.class);
                         MyApp.getContext().startService(intent);
                    }
                     else{
+                        //变为停止,则停止服务
                         AlarmManager alarmManager=
                                 (AlarmManager) MyApp.getContext().getSystemService(Context.ALARM_SERVICE);
                         //取消定时启动
@@ -129,6 +132,10 @@ public class MySettings extends AppCompatPreferenceActivity {
                     return true;
                 }
             });
+
+            myTwoStatePreference= (TwoStatePreference) findPreference("wifi");
+            freshPreference(myTwoStatePreference,sharedPreferences.getBoolean("wifi",false));
+
         }
 
         @Override
@@ -152,21 +159,22 @@ public class MySettings extends AppCompatPreferenceActivity {
             EditTextPreference myEditTextPreference= (EditTextPreference) findPreference("location");
             SharedPreferences sharedPreferences=
                     PreferenceManager.getDefaultSharedPreferences(myEditTextPreference.getContext());
-            myEditTextPreference.setSummary(sharedPreferences.getString("location","武汉"));
+
+            freshPreference(myEditTextPreference,sharedPreferences.getString("location","武汉"));
             myEditTextPreference.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
                 @Override
                 public boolean onPreferenceChange(Preference preference, Object newValue) {
-                    freshPreferenceSummary(preference,newValue.toString());
+                    freshPreference(preference,newValue);
                     return true;
                 }
             });
 
             myEditTextPreference= (EditTextPreference) findPreference("number");
-            myEditTextPreference.setSummary(sharedPreferences.getString("number","57494"));
+            freshPreference(myEditTextPreference,sharedPreferences.getString("number","57494"));
             myEditTextPreference.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
                 @Override
                 public boolean onPreferenceChange(Preference preference, Object newValue) {
-                    freshPreferenceSummary(preference,newValue.toString());
+                    freshPreference(preference,newValue);
                     return true;
                 }
             });
@@ -193,11 +201,11 @@ public class MySettings extends AppCompatPreferenceActivity {
             ListPreference myListPreference= (ListPreference) findPreference("remindTime");
             SharedPreferences sharedPreferences=
                     PreferenceManager.getDefaultSharedPreferences(myListPreference.getContext());
-            myListPreference.setSummary(sharedPreferences.getString("remindTime","22"));
+            freshPreference(myListPreference,sharedPreferences.getString("remindTime","22"));
             myListPreference.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
                 @Override
                 public boolean onPreferenceChange(Preference preference, Object newValue) {
-                    freshPreferenceSummary(preference,newValue.toString());
+                    freshPreference(preference,newValue);
                     return true;
                 }
             });

@@ -8,4 +8,9 @@
         android:summaryOn="@string/state_summaryOn"
         android:summaryOff="@string/state_summaryOff"
         ></SwitchPreference>
+    <CheckBoxPreference
+        android:title="仅在WIFI下刷新"
+        android:key="wifi"
+        android:defaultValue="false"
+        ></CheckBoxPreference>
 </PreferenceScreen>
