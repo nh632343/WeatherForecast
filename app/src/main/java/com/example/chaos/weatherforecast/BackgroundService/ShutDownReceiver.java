@@ -4,6 +4,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.preference.PreferenceManager;
 
 public class ShutDownReceiver extends BroadcastReceiver {
     public ShutDownReceiver() {
@@ -11,7 +12,7 @@ public class ShutDownReceiver extends BroadcastReceiver {
 
     @Override
     public void onReceive(Context context, Intent intent) {
-       SharedPreferences weaPreferences= context.getSharedPreferences("wea", context.MODE_APPEND);
+       SharedPreferences weaPreferences= PreferenceManager.getDefaultSharedPreferences(context);
         SharedPreferences.Editor editor=weaPreferences.edit();
         editor.putBoolean("get",false);
         editor.apply();
